@@ -1,6 +1,9 @@
 """Pagination modules for API Client Kit."""
 
-from .page import PagePaginator
+from .page import PagePagination
 from .cursor import CursorPaginator
 
-__all__ = ["PagePaginator", "CursorPaginator"]
+# Backward-compatible alias: keep older import paths working.
+PagePaginator = PagePagination
+
+__all__ = ["PagePagination", "PagePaginator", "CursorPaginator"]
