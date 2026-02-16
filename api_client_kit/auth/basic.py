@@ -1,21 +1,13 @@
-"""Basic authentication implementation."""
+from __future__ import annotations
+import base64
+from dataclasses import dataclass
+from .base import AuthStrategy
 
-from .base import AuthHandler
+@dataclass(frozen=True)
+class BasicAuth(AuthStrategy):
+    username: str
+    password: str
 
-
-class BasicAuth(AuthHandler):
-    """HTTP Basic Authentication handler."""
-    
-    def __init__(self, username: str, password: str):
-        """Initialize BasicAuth with credentials.
-        
-        Args:
-            username: The username for authentication.
-            password: The password for authentication.
-        """
-        self.username = username
-        self.password = password
-    
-    def apply(self, request):
-        """Apply basic authentication to a request."""
-        pass
+    def apply(self, headers: dict[str, str]) -> None:
+        raw = f"{self.username}:{self.password}".encode("utf-8")
+        headers["Authorization"] = "Basic " + base64.b64encode(raw).decode("ascii")

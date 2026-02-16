@@ -1,12 +1,8 @@
-"""Base authentication handler."""
-
+from __future__ import annotations
 from abc import ABC, abstractmethod
 
-
-class AuthHandler(ABC):
-    """Base class for authentication handlers."""
-    
+class AuthStrategy(ABC):
     @abstractmethod
-    def apply(self, request):
-        """Apply authentication to a request."""
-        pass
+    def apply(self, headers: dict[str, str]) -> None:
+        """Mutate headers in-place."""
+        raise NotImplementedError

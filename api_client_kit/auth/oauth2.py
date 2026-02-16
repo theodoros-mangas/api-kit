@@ -1,21 +1,50 @@
 """OAuth 2.0 authentication implementation."""
 
-from .base import AuthHandler
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import Optional
+import httpx
+from .base import AuthStrategy
 
 
-class OAuth2(AuthHandler):
+@dataclass(frozen=True)
+class OAuth2(AuthStrategy):
     """OAuth 2.0 authentication handler."""
     
-    def __init__(self, client_id: str, client_secret: str):
-        """Initialize OAuth2 with client credentials.
+    client_id: str
+    client_secret: str
+    token_url: str
+    access_token: Optional[str] = None
+    scheme: str = "Bearer"
+
+    def apply(self, headers: dict[str, str]) -> None:
+        """Apply OAuth 2.0 authentication to a request.
         
         Args:
-            client_id: The OAuth 2.0 client ID.
-            client_secret: The OAuth 2.0 client secret.
+            headers: The request headers dict to mutate in-place.
         """
-        self.client_id = client_id
-        self.client_secret = client_secret
-    
-    def apply(self, request):
-        """Apply OAuth 2.0 authentication to a request."""
-        pass
+        if self.access_token:
+            headers["Authorization"] = f"{self.scheme} {self.access_token}"
+        else:
+            raise ValueError("No access token available. Call refresh_token() first.")
+
+    def refresh_token(self) -> str:
+        """Refresh the OAuth 2.0 access token.
+        
+        Returns:
+            The new access token.
+            
+        Raises:
+            Exception: If token refresh fails.
+        """
+        data = {
+            "grant_type": "client_credentials",
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+        }
+        
+        response = httpx.post(self.token_url, data=data)
+        response.raise_for_status()
+        
+        token_data = response.json()
+        return token_data.get("access_token")
