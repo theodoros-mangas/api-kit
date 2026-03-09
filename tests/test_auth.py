@@ -2,6 +2,9 @@
 
 import base64
 from dataclasses import FrozenInstanceError
+from datetime import datetime, timedelta
+from unittest.mock import MagicMock
+
 import pytest
 from api_client_kit.auth import BasicAuth, TokenAuth, OAuth2
 
@@ -169,3 +172,53 @@ class TestOAuth2:
         
         with pytest.raises(FrozenInstanceError):
             setattr(auth, "client_id", "new-client")
+
+    def test_oauth2_is_token_expired_without_expiry(self):
+        """is_token_expired returns True when no token, False when token set but no expiry."""
+        no_token = OAuth2(
+            client_id="c", client_secret="s", token_url="https://x.com/token"
+        )
+        assert no_token.is_token_expired() is True
+
+        with_token = OAuth2(
+            client_id="c", client_secret="s", token_url="https://x.com/token",
+            access_token="tok",
+        )
+        assert with_token.is_token_expired() is False
+
+    def test_oauth2_is_token_expired_with_future_expiry(self):
+        """is_token_expired returns False when expires_at is in the future."""
+        auth = OAuth2(
+            client_id="c", client_secret="s", token_url="https://x.com/token",
+            access_token="tok",
+            expires_at=datetime.utcnow() + timedelta(hours=1),
+        )
+        assert auth.is_token_expired() is False
+
+    def test_oauth2_is_token_expired_with_past_expiry(self):
+        """is_token_expired returns True when expires_at is in the past."""
+        auth = OAuth2(
+            client_id="c", client_secret="s", token_url="https://x.com/token",
+            access_token="tok",
+            expires_at=datetime.utcnow() - timedelta(seconds=1),
+        )
+        assert auth.is_token_expired() is True
+
+    def test_oauth2_refresh_token(self, monkeypatch):
+        """refresh_token fetches a token and updates internal state."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"access_token": "new-tok", "expires_in": 7200}
+        mock_response.raise_for_status = MagicMock()
+
+        monkeypatch.setattr("httpx.post", lambda *a, **kw: mock_response)
+
+        auth = OAuth2(
+            client_id="cid", client_secret="csec",
+            token_url="https://auth.example.com/token",
+        )
+        token = auth.refresh_token()
+
+        assert token == "new-tok"
+        assert auth.access_token == "new-tok"
+        assert auth.expires_at is not None
+        assert auth.expires_at > datetime.utcnow()

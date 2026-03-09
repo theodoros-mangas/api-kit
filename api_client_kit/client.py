@@ -103,6 +103,20 @@ class APIClient:
         self._raise_for_status(resp)
         return resp.json()
 
+    def put_json(self, path: str, *, json_body: dict[str, Any]) -> Json:
+        resp = self._request("PUT", path, json=json_body)
+        self._raise_for_status(resp)
+        return resp.json()
+
+    def patch_json(self, path: str, *, json_body: dict[str, Any]) -> Json:
+        resp = self._request("PATCH", path, json=json_body)
+        self._raise_for_status(resp)
+        return resp.json()
+
+    def delete(self, path: str, *, params: dict[str, Any] | None = None) -> None:
+        resp = self._request("DELETE", path, params=params)
+        self._raise_for_status(resp)
+
     def paginate_page(self, path: str, *, params: dict[str, Any] | None = None, items_path: str = "data",
                       per_page: int = 50, max_pages: int | None = None):
         from .pagination.page import PagePagination
