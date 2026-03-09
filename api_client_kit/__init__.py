@@ -3,6 +3,7 @@
 from .client import APIClient
 from .auth import OAuth2, BasicAuth, TokenAuth
 from .errors import APIError, AuthenticationError, ConfigurationError, RateLimited
+from .retry import RetryPolicy
 
 __version__ = "0.1.0"
 
@@ -11,6 +12,7 @@ __all__ = [
     "OAuth2",
     "BasicAuth",
     "TokenAuth",
+    "RetryPolicy",
     "APIError",
     "AuthenticationError",
     "ConfigurationError",
