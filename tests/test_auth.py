@@ -2,7 +2,7 @@
 
 import base64
 from dataclasses import FrozenInstanceError
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
 
 import pytest
@@ -191,7 +191,7 @@ class TestOAuth2:
         auth = OAuth2(
             client_id="c", client_secret="s", token_url="https://x.com/token",
             access_token="tok",
-            expires_at=datetime.utcnow() + timedelta(hours=1),
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
         )
         assert auth.is_token_expired() is False
 
@@ -200,7 +200,7 @@ class TestOAuth2:
         auth = OAuth2(
             client_id="c", client_secret="s", token_url="https://x.com/token",
             access_token="tok",
-            expires_at=datetime.utcnow() - timedelta(seconds=1),
+            expires_at=datetime.now(timezone.utc) - timedelta(seconds=1),
         )
         assert auth.is_token_expired() is True
 
@@ -221,4 +221,4 @@ class TestOAuth2:
         assert token == "new-tok"
         assert auth.access_token == "new-tok"
         assert auth.expires_at is not None
-        assert auth.expires_at > datetime.utcnow()
+        assert auth.expires_at > datetime.now(timezone.utc)

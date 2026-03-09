@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 import httpx
@@ -51,7 +51,7 @@ class OAuth2(AuthStrategy):
         """Return ``True`` when the token is missing or past its expiry."""
         if self.expires_at is None:
             return self.access_token is None
-        return datetime.utcnow() >= self.expires_at
+        return datetime.now(timezone.utc) >= self.expires_at
 
     def refresh_token(self) -> str:
         """Fetch a new token via the *client_credentials* grant.
@@ -74,7 +74,7 @@ class OAuth2(AuthStrategy):
 
         access_token = token_data.get("access_token")
         expires_in = token_data.get("expires_in", 3600)
-        expires_at = datetime.utcnow() + timedelta(seconds=int(expires_in))
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=int(expires_in))
 
         object.__setattr__(self, "access_token", access_token)
         object.__setattr__(self, "expires_at", expires_at)
@@ -100,7 +100,7 @@ class OAuth2(AuthStrategy):
 
         access_token = token_data.get("access_token")
         expires_in = token_data.get("expires_in", 3600)
-        expires_at = datetime.utcnow() + timedelta(seconds=int(expires_in))
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=int(expires_in))
 
         object.__setattr__(self, "access_token", access_token)
         object.__setattr__(self, "expires_at", expires_at)
